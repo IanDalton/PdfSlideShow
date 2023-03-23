@@ -54,7 +54,7 @@ class MainWindow(QMainWindow):
 
         self.upload_button.clicked.connect(self.upload_file)
         self.generate_slideshow.clicked.connect(self.generate_grid_widget)
-        print(self.setAcceptDrops(True))
+        self.setAcceptDrops(True)
 
         
 
@@ -67,17 +67,17 @@ class MainWindow(QMainWindow):
         
 
     def dragEnterEvent(self, e):
-        print("dragEnterEvent")
+        
         if e.mimeData().hasUrls():
             e.accept()
-            print("Accepted")
+
             
         else:
             e.ignore()
-            print("Ignored")
+
 
     def dropEvent(self, e):
-        print("dropEvent")
+
         for url in e.mimeData().urls():
             self.file_name = str(url.toLocalFile())
             self.file_label.setText(self.file_name)
@@ -105,11 +105,10 @@ class GridWidget(QWidget):
 
         self.grid_layout = QGridLayout(self) # Create a grid layout and set it as the main layout
         images = generate_image_list(dim_x,dim_y,dir)
-        #print(images)
         # Create four slide show labels with different lists of images and add them to the grid layout at different positions
         for y,listsx in enumerate(images):
             for x,image_list in enumerate(listsx):
-                print(image_list,y,x)
+                #print(image_list,y,x)
                 self.grid_layout.addWidget(SlideShowLabel(image_list),y,x)
         display = get_largest_screen()
         self.move(display.x,display.y)

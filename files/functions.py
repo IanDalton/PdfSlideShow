@@ -6,7 +6,8 @@ import requests
 import shutil
 from datetime import  datetime
 
-def update(current_version):
+def update():
+    current_version = 'v0.0.3'
     # Set the repository URL and the current version of the script
     repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
     
@@ -34,7 +35,7 @@ def update(current_version):
             repo_name = 'PdfSlideShow'
         
         # Construct path to PdfSlideShow directory
-            pdfslideshow_path = os.path.dirname(__file__)+'/files'
+            pdfslideshow_path = os.path.dirname(__file__)
             shutil.rmtree(pdfslideshow_path)
             shutil.move(f"../{repo_name}-{latest_version[1:]}/files", pdfslideshow_path)
             

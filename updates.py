@@ -3,8 +3,8 @@ import os
 
 def update():
     # Set the repository URL and the current version of the script
-    repo_url = 'https://api.github.com/repos/USERNAME/REPO_NAME/releases/latest'
-    current_version = '1.0.0'
+    repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
+    current_version = 'v0.0.0'
 
     # Get the latest release information from GitHub
     response = requests.get(repo_url)

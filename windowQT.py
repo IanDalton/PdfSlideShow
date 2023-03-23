@@ -6,7 +6,7 @@ from random import randint
 from PyQt5 import QtWidgets
 import sys,ctypes,os
 from functions import get_largest_screen,extract_images,generate_image_list
-from run import update
+
 #Se le asigna un id al programa para que use el icono que le asignamos
 
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ibalton.pdfSlideShow.v1') 

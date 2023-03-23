@@ -24,23 +24,28 @@ def update(current_version):
             print('Updating...')
 
             # Download and extract the latest version of the code
-            download_url = data['zipball_url']
+            download_url = data['assets'][0]["browser_download_url"]
             response = requests.get(download_url, stream=True)
-            with open('update.zip', 'wb') as f:
+            with open('../update.zip', 'wb') as f:
                 shutil.copyfileobj(response.raw, f)
-            shutil.unpack_archive('update.zip')
+            shutil.unpack_archive('../update.zip')
             
             # Overwrite the local copy of the code with the latest version
-            repo_name = data['name']
-            shutil.rmtree(f"{repo_name}")
-            os.rename(f"{repo_name}-{latest_version}", f"{repo_name}")
+            repo_name = 'PdfSlideShow'
+        
+        # Construct path to PdfSlideShow directory
+            pdfslideshow_path = os.path.dirname(__file__)
+            
+            #shutil.rmtree(pdfslideshow_path)
+            shutil.move(f"../{repo_name}-{latest_version[1:]}", pdfslideshow_path)
             
             print('Update complete!')
 
         else:
             print('No updates available.')
-    except:
-        if int(response.headers['X-RateLimit-Remaining']) == 0:
+    except KeyError as e:
+        print(e)
+        if int(response.headers.get('X-RateLimit-Remaining')) == 0:
             print('Warning! No more calls this hour. Time until next update:', datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))-datetime.now())
         pass
 def get_largest_screen():

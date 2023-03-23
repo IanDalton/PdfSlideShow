@@ -31,7 +31,7 @@ class MainWindow(QMainWindow):
         self.column_input.setValidator(QIntValidator())
         self.file_label = QtWidgets.QLabel('')
         self.upload_button = QtWidgets.QPushButton('Upload File')
-        self.generate_slideshow = QtWidgets.QPushButton('Enabledsss Button')
+        self.generate_slideshow = QtWidgets.QPushButton('Create Slideshow')
         self.generate_slideshow.setEnabled(False)
 
         wid = QWidget()

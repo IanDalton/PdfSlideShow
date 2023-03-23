@@ -6,6 +6,7 @@ from random import randint
 from PyQt5 import QtWidgets
 import sys,ctypes,os
 from functions import get_largest_screen,extract_images,generate_image_list
+from run import update
 #Se le asigna un id al programa para que use el icono que le asignamos
 
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('ibalton.pdfSlideShow.v1') 
@@ -104,7 +105,7 @@ class GridWidget(QWidget):
 
         self.grid_layout = QGridLayout(self) # Create a grid layout and set it as the main layout
         images = generate_image_list(dim_x,dim_y,dir)
-        print(images)
+        #print(images)
         # Create four slide show labels with different lists of images and add them to the grid layout at different positions
         for y,listsx in enumerate(images):
             for x,image_list in enumerate(listsx):

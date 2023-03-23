@@ -2,6 +2,47 @@ from screeninfo import get_monitors,Monitor
 from PIL import Image
 import fitz
 import os
+import requests
+import shutil
+from datetime import  datetime
+
+def update(current_version):
+    # Set the repository URL and the current version of the script
+    repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
+    
+    
+    # Get the latest release information from GitHub
+    response = requests.get(repo_url)
+    data = response.json()
+    print('Calls remaining: ', response.headers['X-RateLimit-Remaining'])
+    try:
+        latest_version = data['tag_name']
+
+        # Compare the current and latest versions
+        if current_version != latest_version:
+            print(f'New version available: {latest_version}')
+            print('Updating...')
+
+            # Download and extract the latest version of the code
+            download_url = data['zipball_url']
+            response = requests.get(download_url, stream=True)
+            with open('update.zip', 'wb') as f:
+                shutil.copyfileobj(response.raw, f)
+            shutil.unpack_archive('update.zip')
+            
+            # Overwrite the local copy of the code with the latest version
+            repo_name = data['name']
+            shutil.rmtree(f"{repo_name}")
+            os.rename(f"{repo_name}-{latest_version}", f"{repo_name}")
+            
+            print('Update complete!')
+
+        else:
+            print('No updates available.')
+    except:
+        if int(response.headers['X-RateLimit-Remaining']) == 0:
+            print('Warning! No more calls this hour. Time until next update:', datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))-datetime.now())
+        pass
 def get_largest_screen():
     dmax:Monitor = Monitor(0,0,0,0,0,0)
     

@@ -1,7 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel,QMainWindow,QFileDialog
-from PyQt5.QtGui import QPixmap,QIntValidator,QDragEnterEvent,QDropEvent
-from PyQt5.QtCore import QTimer,Qt,QMimeData
+from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel,QMainWindow,QFileDialog,QStackedWidget,QHBoxLayout,QGraphicsOpacityEffect
+from PyQt5.QtGui import QPixmap,QIntValidator
+from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
 from random import randint
 from PyQt5 import QtWidgets
 import sys,ctypes,os
@@ -17,8 +19,6 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.init_ui()
-        self.widget = GridWidget(2,1)
-        #self.widget.show()
 
     def init_ui(self):
         self.row_label = QtWidgets.QLabel('Rows:')
@@ -34,6 +34,21 @@ class MainWindow(QMainWindow):
         self.generate_slideshow = QtWidgets.QPushButton('Create Slideshow')
         self.generate_slideshow.setEnabled(False)
 
+        # Create a label, slider, and line edit for controlling the duration
+        duration_box = QHBoxLayout()
+        self.duration_label = QtWidgets.QLabel('Duración:')
+        self.duration_slider = QtWidgets.QSlider(Qt.Horizontal)
+        duration_units = QtWidgets.QLabel('s')
+        self.duration_slider.setRange(1, 60)
+        self.duration_slider.setValue(5)
+        self.duration_input = QtWidgets.QLineEdit()
+        self.duration_input.setText('15')
+        self.duration_input.setValidator(QIntValidator())
+
+        # Connect the slider and line edit signals to update each other
+        self.duration_slider.valueChanged.connect(lambda value: self.duration_input.setText(str(value)))
+        self.duration_input.textChanged.connect(lambda text: self.duration_slider.setValue(int(text)))
+
         wid = QWidget()
         v_box = QtWidgets.QVBoxLayout()
         v_box.addWidget(self.row_label)
@@ -45,6 +60,15 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.upload_button)
         h_box.addWidget(self.file_label)
 
+        # Add the duration widgets to the layout
+        
+        duration_box.addWidget(self.duration_label)
+        duration_box.addWidget(self.duration_input)
+        duration_box.addWidget(duration_units)
+        v_box.addLayout(duration_box)
+        v_box.addWidget(self.duration_slider)
+        
+
         v_box.addLayout(h_box)
         v_box.addWidget(self.generate_slideshow)
 
@@ -55,7 +79,7 @@ class MainWindow(QMainWindow):
         self.upload_button.clicked.connect(self.upload_file)
         self.generate_slideshow.clicked.connect(self.generate_grid_widget)
         self.setAcceptDrops(True)
-
+        
         
 
     def upload_file(self):
@@ -90,7 +114,7 @@ class MainWindow(QMainWindow):
     
     def generate_grid_widget(self):
         
-        self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name) 
+        self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name,duration=self.duration_slider.value()) 
         self.grid_widget.showFullScreen()
         self.hide()
 
@@ -98,7 +122,7 @@ class MainWindow(QMainWindow):
 
 
 class GridWidget(QWidget):
-    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf'):
+    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=5):
         super().__init__()
 
         extract_images(pdf_dir) #Extracting all images from pdf
@@ -109,7 +133,7 @@ class GridWidget(QWidget):
         for y,listsx in enumerate(images):
             for x,image_list in enumerate(listsx):
                 #print(image_list,y,x)
-                self.grid_layout.addWidget(SlideShowLabel(image_list),y,x)
+                self.grid_layout.addWidget(SlideShowLabel(image_list,duration),y,x)
         display = get_largest_screen()
         self.move(display.x,display.y)
         #self.showFullScreen()
@@ -117,30 +141,96 @@ class GridWidget(QWidget):
 
 
 # A custom label class that shows a slideshow of images
-class SlideShowLabel(QLabel):
-    def __init__(self, filenames):
-        super().__init__()
-        self.filenames = filenames # A list of image file names
-        self.index = 0 # The current index of the image to show
-        self.timer = QTimer(self) # A timer to change the image periodically
-        self.timer.timeout.connect(self.nextImage) # Connect the timer signal to a slot method
-        self.timer.start(5000) # Start the timer with 5 second interval
-        self.setPixmap(QPixmap(self.filenames[self.index])) # Set the initial pixmap
-        self.setAlignment(Qt.AlignCenter)
 
-    def nextImage(self):
+class SlideShowLabel(QStackedWidget):
+    def __init__(self, filenames,duration):
+        super().__init__()
+        self.filenames = filenames
+        self.index = 0
+        self.default_duration = duration*1000
+        # Create a QLabel to display images
+        self.imageLabel = QLabel()
+        self.imageLabel.setAlignment(Qt.AlignCenter)
+        self.addWidget(self.imageLabel)
+
+        # Create a QGraphicsOpacityEffect to control the opacity of the image label
+        self.imageOpacityEffect = QGraphicsOpacityEffect(self.imageLabel)
+        self.imageLabel.setGraphicsEffect(self.imageOpacityEffect)
+
+        # Create a QPropertyAnimation to animate the opacity of the image label
+        self.imageOpacityAnimation = QPropertyAnimation(self.imageOpacityEffect, b'opacity')
+        self.imageOpacityAnimation.setDuration(1000)
+        self.imageOpacityAnimation.setStartValue(0.0)
+        self.imageOpacityAnimation.setEndValue(1.0)
+
+
+        # Create a QVideoWidget to display videos
+        self.videoWidget = QVideoWidget()
+        self.addWidget(self.videoWidget)
+
+        # Create a QGraphicsOpacityEffect to control the opacity of the video widget
+        self.videoOpacityEffect = QGraphicsOpacityEffect(self.videoWidget)
+        self.videoWidget.setGraphicsEffect(self.videoOpacityEffect)
+
+        # Create a QPropertyAnimation to animate the opacity of the video widget
+        self.videoOpacityAnimation = QPropertyAnimation(self.videoOpacityEffect, b'opacity')
+        self.videoOpacityAnimation.setDuration(1000)
+        self.videoOpacityAnimation.setStartValue(0.0)
+        self.videoOpacityAnimation.setEndValue(1.0)
+
+
+        # Create a QMediaPlayer to control video playback
+        self.mediaPlayer = QMediaPlayer()
+        self.mediaPlayer.setVideoOutput(self.videoWidget)
+
+        # Create a QTimer to change the media periodically
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.nextMedia)
+        self.timer.start(self.default_duration)
+
+        # Set the initial media
+        self.setMedia(self.filenames[self.index])
+
+    def setMedia(self, filename):
+        if filename.endswith(('.mp4', '.avi', '.mov')):
+            # If the file is a video, set the media source and play it
+            
+            self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
+            self.timer.setInterval(self.mediaPlayer.duration())
+            self.mediaPlayer.setVolume(0)
+            self.mediaPlayer.play()
+            # Show the video widget and hide the image label
+            self.setCurrentWidget(self.videoWidget)
+            # Start the video opacity animation
+            self.videoOpacityAnimation.start()
+            # Reset the image opacity for next time it is shown
+            self.imageOpacityEffect.setOpacity(0.0)
+        else:
+            # If the file is an image, set the pixmap and show it
+            pixmap = QPixmap(filename).scaled(self.size(), Qt.KeepAspectRatio)
+            self.imageLabel.setPixmap(pixmap)
+            self.timer.setInterval(self.default_duration)
+            # Show the image label and hide the video widget
+            self.setCurrentWidget(self.imageLabel)
+            # Start the image opacity animation
+            self.imageOpacityAnimation.start()
+            # Reset the video opacity for next time it is shown
+            self.videoOpacityEffect.setOpacity(0.0)
+
+    def nextMedia(self):
         # Increment the index and wrap around if it exceeds the length of the list
         self.index = (self.index + 1) % len(self.filenames)
-        # Set the pixmap to the next image file name
+        # Set the media to the next file name
+        self.setMedia(self.filenames[self.index])
 
-        self.setPixmap(QPixmap(self.filenames[self.index]))
-        self.setPixmap(QPixmap(self.filenames[self.index]).scaled(self.size(), Qt.KeepAspectRatio))
     def resizeEvent(self, event):
-        # Get the current size of the label
+        super().resizeEvent(event)
+        # Get the current size of the widget
         size = self.size()
         # Scale and set a new pixmap according to that size and keep aspect ratio
-        self.setPixmap(QPixmap(self.filenames[self.index]).scaled(size, Qt.KeepAspectRatio))
-
+        if not isinstance(self.currentWidget(), QVideoWidget):
+            pixmap = QPixmap(self.filenames[self.index]).scaled(size, Qt.KeepAspectRatio)
+            self.imageLabel.setPixmap(pixmap)
     
 def main():
     app = QApplication(sys.argv)

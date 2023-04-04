@@ -31,6 +31,9 @@ class MainWindow(QMainWindow):
         self.upload_button = QtWidgets.QPushButton('Upload File')
         self.generate_slideshow = QtWidgets.QPushButton('Create Slideshow')
         self.generate_slideshow.setEnabled(False)
+        self.video_folder_label = QtWidgets.QLabel('')
+        self.select_folder_button = QtWidgets.QPushButton('Select Folder')
+
 
         # Create a label, slider, and line edit for controlling the duration
         duration_box = QHBoxLayout()
@@ -58,16 +61,22 @@ class MainWindow(QMainWindow):
         h_box.addWidget(self.upload_button)
         h_box.addWidget(self.file_label)
 
+        v_folder_box = QHBoxLayout()
+        v_folder_box.addWidget(self.select_folder_button)
+        v_folder_box.addWidget(self.video_folder_label)
+
         # Add the duration widgets to the layout
         
         duration_box.addWidget(self.duration_label)
         duration_box.addWidget(self.duration_input)
         duration_box.addWidget(duration_units)
+        
         v_box.addLayout(duration_box)
         v_box.addWidget(self.duration_slider)
         
 
         v_box.addLayout(h_box)
+        v_box.addLayout(v_folder_box)
         v_box.addWidget(self.generate_slideshow)
 
         wid.setLayout(v_box)
@@ -75,11 +84,17 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('PyQt5 Window')
 
         self.upload_button.clicked.connect(self.upload_file)
+        self.select_folder_button.clicked.connect(self.select_folder)
         self.generate_slideshow.clicked.connect(self.generate_grid_widget)
         self.setAcceptDrops(True)
+        self.folder_name = None
         
         
-
+    def select_folder(self):
+        self.folder_name = QFileDialog.getExistingDirectory(self , options=QFileDialog.DontUseNativeDialog)
+        if self.folder_name:
+            print(f'File uploaded: {self.folder_name}')
+            self.video_folder_label.setText(self.folder_name)
     def upload_file(self):
         self.file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', filter='PDF Files (*.pdf)', options=QFileDialog.DontUseNativeDialog)
         if self.file_name:
@@ -106,7 +121,7 @@ class MainWindow(QMainWindow):
     
     def generate_grid_widget(self):
         
-        self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name,duration=self.duration_slider.value()) 
+        self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name,duration=self.duration_slider.value(),videos=self.folder_name) 
         self.grid_widget.showFullScreen()
         self.hide()
 
@@ -114,14 +129,14 @@ class MainWindow(QMainWindow):
 
 
 class GridWidget(QWidget):
-    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=10):
+    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=10,videos:str=None):
         super().__init__()
 
         extract_images(pdf_dir) #Extracting all images from pdf
         self.showFullScreen()
         
         self.grid_layout = QGridLayout(self) # Create a grid layout and set it as the main layout
-        images = generate_image_list(dim_x,dim_y,dir)
+        images = generate_image_list(dim_x,dim_y,dir,videos)
         # Create four slide show labels with different lists of images and add them to the grid layout at different positions
         prev_label:SlideShowLabel = None
         i=0

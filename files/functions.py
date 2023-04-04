@@ -91,7 +91,7 @@ def del_images(img_folder:str='images'):
     if os.path.exists(img_folder):
         shutil.rmtree(img_folder)
 
-def generate_image_list(x:int,y:int,dir:str)->list:
+def generate_image_list(x:int,y:int,dir:str,video_folder:str=None)->list:
     images = list()
     for i in range(y):
             images.append([])
@@ -102,6 +102,9 @@ def generate_image_list(x:int,y:int,dir:str)->list:
         sort.append([])
     for i,image in enumerate(os.listdir(dir)):
         sort[i%y].append(f'{dir}/{image}')
+    if video_folder:
+        for i,video in enumerate(os.listdir(video_folder)):
+            sort[i%y].append(f'{video_folder}/{video}')
     for yi,db in enumerate(sort):
         for i, image in enumerate(db):
               images[yi][i%x].append(image)

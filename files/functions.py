@@ -5,6 +5,7 @@ import os
 import requests
 import shutil
 from datetime import  datetime
+from multiprocessing import Process
 
 def update():
     current_version = 'v0.0.4'
@@ -65,21 +66,25 @@ def extract_images(dir):
 
     pdf_file = fitz.open(dir)
     page:fitz.Page
-    piz: fitz.Pixmap
+    
     filelist = [ f for f in os.listdir('images') if f.endswith(".jpg") ]
     for f in filelist:
         os.remove(os.path.join('images', f))
-    
+
+    processes = []
     for i,page in enumerate(pdf_file):
-        piz = page.get_pixmap(matrix=fitz.Identity,dpi=None,colorspace=fitz.csRGB,clip=None,alpha=False,annots=False)
-        """ og_height,og_width = piz.height,piz.width
-        zoom = 1
-        mat = fitz.Matrix(zoom,zoom)
-        piz = page.get_pixmap(matrix=mat,dpi=None,colorspace=fitz.csRGB,clip=None,alpha=False,annots=False)
+        p = Process(target=save_image, args=(dir,i))
+        p.start()
+        processes.append(p)
+    p:Process
+    for p in processes:
+        p.join()
 
-        print(og_height,piz.height) """
-
-        piz.save(f"images/{i}.jpg")
+def save_image(pdf_dir,i):
+    pdf_file = fitz.open(pdf_dir)
+    page = pdf_file[i]
+    piz = page.get_pixmap(matrix=fitz.Identity,dpi=500,colorspace=fitz.csRGB,clip=None,alpha=False,annots=False)
+    piz.save(f"images/{i}.jpg")
 
 
 

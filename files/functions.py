@@ -7,7 +7,7 @@ import shutil
 from datetime import  datetime
 
 def update():
-    current_version = 'v0.0.4'
+    current_version = 'v0.0.3'
     # Set the repository URL and the current version of the script
     repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
     
@@ -50,6 +50,7 @@ def update():
         if int(response.headers.get('X-RateLimit-Remaining')) == 0:
             print('Warning! No more calls this hour. Time until next update:', datetime.fromtimestamp(int(response.headers['X-RateLimit-Reset']))-datetime.now())
         pass
+
 def get_largest_screen():
     dmax:Monitor = Monitor(0,0,0,0,0,0)
     
@@ -81,7 +82,9 @@ def extract_images(dir):
 
         piz.save(f"images/{i}.jpg")
 
-
+def del_images(img_folder:str='images'):
+    if os.path.exists(img_folder):
+        shutil.rmtree(img_folder)
 
 def generate_image_list(x:int,y:int,dir:str)->list:
     images = list()

@@ -4,3 +4,5 @@ pip install fitz
 pip install screeninfo
 
 ## Known bugs
+
+Might crash on generating slideshow

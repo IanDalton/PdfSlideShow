@@ -5,7 +5,7 @@ from PyQt5.QtCore import QTimer,Qt,QMimeData
 from random import randint
 from PyQt5 import QtWidgets
 import sys,ctypes,os
-from files.functions import get_largest_screen,extract_images,generate_image_list
+from files.functions import get_largest_screen,extract_images,generate_image_list,del_images
 
 #Se le asigna un id al programa para que use el icono que le asignamos
 
@@ -113,7 +113,7 @@ class GridWidget(QWidget):
         display = get_largest_screen()
         self.move(display.x,display.y)
         #self.showFullScreen()
-        
+ 
 
 
 # A custom label class that shows a slideshow of images
@@ -146,7 +146,10 @@ def main():
     app = QApplication(sys.argv)
     window = MainWindow()
     window.show()
+    del_images()
     sys.exit(app.exec_())
+    
+
 
 if __name__ == "__main__":
     main()

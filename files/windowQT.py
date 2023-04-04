@@ -1,10 +1,8 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel,QMainWindow,QFileDialog,QStackedWidget,QHBoxLayout,QGraphicsOpacityEffect
 from PyQt5.QtGui import QPixmap,QIntValidator
 from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
-from random import randint
 from PyQt5 import QtWidgets
 import sys,ctypes,os
 from files.functions import get_largest_screen,extract_images,generate_image_list
@@ -91,11 +89,8 @@ class MainWindow(QMainWindow):
         
 
     def dragEnterEvent(self, e):
-        
         if e.mimeData().hasUrls():
             e.accept()
-
-            
         else:
             e.ignore()
 
@@ -108,9 +103,6 @@ class MainWindow(QMainWindow):
         if self.file_name:
             self.generate_slideshow.setEnabled(True)
         
-
-
-      
     
     def generate_grid_widget(self):
         
@@ -122,36 +114,57 @@ class MainWindow(QMainWindow):
 
 
 class GridWidget(QWidget):
-    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=5):
+    def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=10):
         super().__init__()
 
         extract_images(pdf_dir) #Extracting all images from pdf
-
+        self.showFullScreen()
+        
         self.grid_layout = QGridLayout(self) # Create a grid layout and set it as the main layout
         images = generate_image_list(dim_x,dim_y,dir)
         # Create four slide show labels with different lists of images and add them to the grid layout at different positions
+        prev_label:SlideShowLabel = None
+        i=0
         for y,listsx in enumerate(images):
             for x,image_list in enumerate(listsx):
                 #print(image_list,y,x)
-                self.grid_layout.addWidget(SlideShowLabel(image_list,duration),y,x)
+                label = SlideShowLabel(image_list,duration,i)
+                self.grid_layout.addWidget(label,y,x)
+                if prev_label:
+                    prev_label.get_next(label)
+                prev_label = label
+                i+=1
+                
         display = get_largest_screen()
         self.move(display.x,display.y)
-        #self.showFullScreen()
+        self.showFullScreen()
         
 
 
 # A custom label class that shows a slideshow of images
 
 class SlideShowLabel(QStackedWidget):
-    def __init__(self, filenames,duration):
+    def __init__(self, filenames,duration,index):
         super().__init__()
+        self.us_index = index
         self.filenames = filenames
         self.index = 0
         self.default_duration = duration*1000
+        self.setStyleSheet('background-color:white;')
+        # Pre-load and pre-scale all the images
+        self.pixmaps = []
+        self.filenames = filenames
+        for filename in filenames:
+            if not filename.endswith(('.mp4', '.avi', '.mov')):
+                pixmap = QPixmap(filename).scaled(self.size(), Qt.KeepAspectRatio,Qt.SmoothTransformation)
+                self.pixmaps.append(pixmap)
+            else:
+                self.pixmaps.append(None)
         # Create a QLabel to display images
         self.imageLabel = QLabel()
         self.imageLabel.setAlignment(Qt.AlignCenter)
         self.addWidget(self.imageLabel)
+        
 
         # Create a QGraphicsOpacityEffect to control the opacity of the image label
         self.imageOpacityEffect = QGraphicsOpacityEffect(self.imageLabel)
@@ -166,6 +179,7 @@ class SlideShowLabel(QStackedWidget):
 
         # Create a QVideoWidget to display videos
         self.videoWidget = QVideoWidget()
+        
         self.addWidget(self.videoWidget)
 
         # Create a QGraphicsOpacityEffect to control the opacity of the video widget
@@ -190,13 +204,18 @@ class SlideShowLabel(QStackedWidget):
 
         # Set the initial media
         self.setMedia(self.filenames[self.index])
+        self.lastSize = self.size()
+        self.next_label = None
+    def get_next(self,label):
+        self.next_label:SlideShowLabel = label
+        self.next_label.timer.stop()
 
     def setMedia(self, filename):
         if filename.endswith(('.mp4', '.avi', '.mov')):
             # If the file is a video, set the media source and play it
             
             self.mediaPlayer.setMedia(QMediaContent(QUrl.fromLocalFile(filename)))
-            self.timer.setInterval(self.mediaPlayer.duration())
+
             self.mediaPlayer.setVolume(0)
             self.mediaPlayer.play()
             # Show the video widget and hide the image label
@@ -205,11 +224,13 @@ class SlideShowLabel(QStackedWidget):
             self.videoOpacityAnimation.start()
             # Reset the image opacity for next time it is shown
             self.imageOpacityEffect.setOpacity(0.0)
+
         else:
-            # If the file is an image, set the pixmap and show it
-            pixmap = QPixmap(filename).scaled(self.size(), Qt.KeepAspectRatio)
+            # If the file is an image, use the pre-scaled pixmap and show it
+            pixmap = self.pixmaps[self.index]
             self.imageLabel.setPixmap(pixmap)
-            self.timer.setInterval(self.default_duration)
+
+
             # Show the image label and hide the video widget
             self.setCurrentWidget(self.imageLabel)
             # Start the image opacity animation
@@ -218,19 +239,40 @@ class SlideShowLabel(QStackedWidget):
             self.videoOpacityEffect.setOpacity(0.0)
 
     def nextMedia(self):
-        # Increment the index and wrap around if it exceeds the length of the list
-        self.index = (self.index + 1) % len(self.filenames)
-        # Set the media to the next file name
-        self.setMedia(self.filenames[self.index])
+        def change_media():
+            # Increment the index and wrap around if it exceeds the length of the list
+            self.index = (self.index + 1) % len(self.filenames)
+            # Set the media to the next file name
+            self.setMedia(self.filenames[self.index])
+        
+        print(f'{self.us_index}: ',end='')
+        # Check if a video is playing, if it isn't go to the next file
+        if self.mediaPlayer.state() != QMediaPlayer.PlayingState:
+            change_media()
+        
+        print(self.filenames[self.index])
+        # wait a second, then go to the next one
+        if self.next_label:
+            print(f'{self.us_index} --> ',end='')
+            QTimer.singleShot(1000,lambda:self.next_label.nextMedia())
+            
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
         # Get the current size of the widget
         size = self.size()
         # Scale and set a new pixmap according to that size and keep aspect ratio
-        if not isinstance(self.currentWidget(), QVideoWidget):
-            pixmap = QPixmap(self.filenames[self.index]).scaled(size, Qt.KeepAspectRatio)
-            self.imageLabel.setPixmap(pixmap)
+        if abs(size.width() - self.lastSize.width()) > 10 or abs(size.height() - self.lastSize.height()) > 10:
+        # Scale and set a new pixmap according to that size and keep aspect ratio
+            self.pixmaps = list()
+            for filename in self.filenames:
+                if not filename.endswith(('.mp4', '.avi', '.mov')):
+                    pixmap = QPixmap(filename).scaled(self.size(), Qt.KeepAspectRatio,Qt.SmoothTransformation)
+                    self.pixmaps.append(pixmap)
+                else:
+                    self.pixmaps.append(None)
+                # Update the last size
+            self.lastSize = size
     
 def main():
     app = QApplication(sys.argv)

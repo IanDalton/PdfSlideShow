@@ -104,7 +104,7 @@ def generate_image_list(x:int,y:int,dir:str,video_folder:str=None)->list:
         sort[i%y].append(f'{dir}/{image}')
     if video_folder:
         for i,video in enumerate(os.listdir(video_folder)):
-            sort[i%y].append(f'{video_folder}/{video}')
+            sort[i%y].append(f'{video_folder}/{video}') if '.mp4' in video else None
     for yi,db in enumerate(sort):
         for i, image in enumerate(db):
               images[yi][i%x].append(image)

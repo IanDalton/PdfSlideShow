@@ -4,6 +4,8 @@ from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
 from PyQt5 import QtWidgets
+import json
+
 import sys,ctypes,os
 from files.functions import get_largest_screen,extract_images,generate_image_list,del_images
 
@@ -124,7 +126,37 @@ class MainWindow(QMainWindow):
         self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name,duration=self.duration_slider.value(),videos=self.folder_name) 
         self.grid_widget.showFullScreen()
         self.hide()
+    
+    def save(self):
+        with open('.\\files\\data.json','w') as file:
+            json.dump({
+                'row':self.row_input.text(),
+                'column':self.column_input.text(),
+                'pdf':self.file_name,
+                'videos':self.folder_name,
+                'seconds':self.duration_input.text()
+            },file)
+    def load(self):
+        try:
+            with open('.\\files\\data.json','r') as file:
+                data = json.load(file)
+                self.row_input.setText(data['row'])
+                self.column_input.setText(data['column'])
+                self.duration_input.setText(data['seconds'])
+                self.file_name = data['pdf']
+                self.folder_name = data['videos']
 
+                #Change the text so the selected folder appears in the UI
+                self.file_label.setText(self.file_name)
+                self.video_folder_label.setText(self.folder_name)
+
+                #Change the slider value
+                self.duration_slider.setValue(int(self.duration_input.text()))
+                
+                #Enable the button
+                self.generate_slideshow.setEnabled(True)
+        except:
+            pass
     
 
 
@@ -291,10 +323,16 @@ class SlideShowLabel(QStackedWidget):
     
 def main():
     app = QApplication(sys.argv)
+    
     window = MainWindow()
+    window.load()
     window.show()
+    while app.exec_():
+        pass
     del_images()
-    sys.exit(app.exec_())
+    window.save()
+    sys.exit()
+    
     
 
 

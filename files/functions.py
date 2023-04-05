@@ -1,11 +1,12 @@
 from screeninfo import get_monitors,Monitor
 from PIL import Image
-import fitz
-import os
-import requests
-import shutil
+import fitz,subprocess,sys,os,requests,shutil
 from datetime import  datetime
 from multiprocessing import Process
+
+def check_new_packages():
+    subprocess.check_call([sys.executable, "-m", "pip", "install",'-r','.\\files\\requirements.txt'])
+
 
 def update():
     current_version = 'v0.0.3'
@@ -24,6 +25,7 @@ def update():
         if current_version != latest_version:
             print(f'New version available: {latest_version}')
             print('Updating...')
+            
 
             # Download and extract the latest version of the code
             download_url = data['assets'][0]["browser_download_url"]
@@ -34,6 +36,7 @@ def update():
             
             # Overwrite the local copy of the code with the latest version
             repo_name = 'PdfSlideShow'
+
         
         # Construct path to PdfSlideShow directory
             pdfslideshow_path = os.path.dirname(__file__)
@@ -43,6 +46,7 @@ def update():
             shutil.rmtree(f"../{repo_name}-{latest_version[1:]}")
             
             print('Update complete!')
+            check_new_packages()
 
         else:
             print('No updates available.')

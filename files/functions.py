@@ -9,7 +9,7 @@ def check_new_packages():
 
 
 def update():
-    current_version = 'v0.0.3'
+    current_version = 'v0.0.4'
     # Set the repository URL and the current version of the script
     repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
     

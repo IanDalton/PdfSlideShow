@@ -9,7 +9,7 @@ def check_new_packages():
 
 
 def update():
-    current_version = 'v0.0.4'
+    current_version = 'v0.0.5'
     # Set the repository URL and the current version of the script
     repo_url = 'https://api.github.com/repos/IanDalton/PdfSlideShow/releases/latest'
     
@@ -20,7 +20,7 @@ def update():
     print('Calls remaining: ', response.headers['X-RateLimit-Remaining'])
     try:
         latest_version = data['tag_name']
-
+        
         # Compare the current and latest versions
         if current_version != latest_version:
             print(f'New version available: {latest_version}')
@@ -45,8 +45,9 @@ def update():
             shutil.rmtree('../update.zip')
             shutil.rmtree(f"../{repo_name}-{latest_version[1:]}")
             
-            print('Update complete!')
             check_new_packages()
+            print('Update complete!')
+            
 
         else:
             print('No updates available.')

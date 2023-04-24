@@ -7,7 +7,7 @@ from PyQt5 import QtWidgets
 import json
 
 import sys,ctypes,os
-from files.functions import get_largest_screen,extract_images,generate_image_list,del_images
+from files.functions import get_largest_screen,extract_images,generate_image_list,del_images,check_new_packages
 
 #Se le asigna un id al programa para que use el icono que le asignamos
 
@@ -156,6 +156,7 @@ class MainWindow(QMainWindow):
                 #Enable the button
                 self.generate_slideshow.setEnabled(True)
         except:
+            check_new_packages()
             pass
     
 

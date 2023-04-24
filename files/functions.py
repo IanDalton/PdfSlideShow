@@ -3,7 +3,7 @@ from PIL import Image
 import fitz,os,requests,shutil
 from datetime import  datetime
 from multiprocessing import Process
-from.install_packages import check_new_packages
+from .install_packages import check_new_packages
 
 
 
@@ -60,12 +60,14 @@ def get_largest_screen():
     dmax:Monitor = Monitor(0,0,0,0,0,0)
     
     for m in get_monitors():
-        if dmax.height_mm*dmax.width_mm <= m.height_mm*m.width_mm:
+        
+        if dmax.height_mm*dmax.width_mm <= m.height_mm*m.width_mm or dmax.width_mm == 0:
             dmax=m
                 
     return dmax
 
 def extract_images(dir):
+    
     if not os.path.exists('images'):
         os.makedirs('images')
 
@@ -88,7 +90,7 @@ def extract_images(dir):
 def save_image(pdf_dir,i):
     pdf_file = fitz.open(pdf_dir)
     page = pdf_file[i]
-    piz = page.get_pixmap(matrix=fitz.Identity,dpi=500,colorspace=fitz.csRGB,clip=None,alpha=False,annots=False)
+    piz = page.get_pixmap(matrix=fitz.Identity,dpi=250,colorspace=fitz.csRGB,clip=None,alpha=False,annots=False)
     piz.save(f"images/{i}.jpg")
 
 def del_images(img_folder:str='images'):
@@ -118,4 +120,4 @@ if __name__ == "__main__":
     for i in get_monitors():
         print(i)
     print(get_largest_screen())
-    extract_images('pdf.pdf')
+    #extract_images('pdf.pdf')

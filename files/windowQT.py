@@ -90,6 +90,7 @@ class MainWindow(QMainWindow):
         self.generate_slideshow.clicked.connect(self.generate_grid_widget)
         self.setAcceptDrops(True)
         self.folder_name = None
+        self.file_name = None
         
         
     def select_folder(self):

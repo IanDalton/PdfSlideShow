@@ -1,8 +1,13 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout, QLabel,QMainWindow,QFileDialog,QStackedWidget,QHBoxLayout,QGraphicsOpacityEffect
+from PyQt5.QtWidgets import (QApplication, QWidget,
+                              QGridLayout, QLabel,
+                              QMainWindow,QFileDialog,
+                              QStackedWidget,QHBoxLayout,
+                              QGraphicsOpacityEffect,QSizePolicy)
 from PyQt5.QtGui import QPixmap,QIntValidator
-from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation
+from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation,QPoint
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
+
 from PyQt5 import QtWidgets
 import json
 
@@ -91,8 +96,16 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)
         self.folder_name = None
         self.file_name = None
+        moverbtn = QtWidgets.QPushButton()
+        moverbtn.setText('MOVER')
+        moverbtn.clicked.connect(self.mover)
+        #v_box.addWidget(moverbtn)
         
+
         
+    def mover(self):
+        s = get_largest_screen()
+        self.move(s.x,s.y)
     def select_folder(self):
         self.folder_name = QFileDialog.getExistingDirectory(self , options=QFileDialog.DontUseNativeDialog)
         if self.folder_name:
@@ -125,7 +138,7 @@ class MainWindow(QMainWindow):
     def generate_grid_widget(self):
         
         self.grid_widget =GridWidget(dim_x=int(self.column_input.text()),dim_y=int(self.row_input.text()),pdf_dir=self.file_name,duration=self.duration_slider.value(),videos=self.folder_name) 
-        self.grid_widget.showFullScreen()
+        
         self.hide()
     
     def save(self):
@@ -157,7 +170,6 @@ class MainWindow(QMainWindow):
                 #Enable the button
                 self.generate_slideshow.setEnabled(True)
         except:
-            check_new_packages()
             pass
     
 
@@ -165,15 +177,31 @@ class MainWindow(QMainWindow):
 class GridWidget(QWidget):
     def __init__(self,dim_x:int,dim_y:int,dir:str='images',pdf_dir:str='pdf.pdf',duration:int=10,videos:str=None):
         super().__init__()
-
-        extract_images(pdf_dir) #Extracting all images from pdf
-        self.showFullScreen()
+        pdf = None
+        try:
+            with open('.\\files\\data.json','r') as file:
+                datos = json.load(file)
+                pdf = datos["pdf"]
+        except:
+            pass
+        if pdf_dir != pdf or not os.path.exists('images'):
+            print('Generando imagenes')
+            del_images()
+            extract_images(pdf_dir) #Extracting all images from pdf
         
         self.grid_layout = QGridLayout(self) # Create a grid layout and set it as the main layout
         images = generate_image_list(dim_x,dim_y,dir,videos)
         # Create four slide show labels with different lists of images and add them to the grid layout at different positions
         prev_label:SlideShowLabel = None
         i=0
+
+        display = get_largest_screen()
+        print(display)
+        
+        self.move(QPoint(display.x,display.y))
+        self.show()
+        
+        self.showFullScreen()
         for y,listsx in enumerate(images):
             for x,image_list in enumerate(listsx):
                 #print(image_list,y,x)
@@ -184,9 +212,8 @@ class GridWidget(QWidget):
                 prev_label = label
                 i+=1
                 
-        display = get_largest_screen()
-        self.move(display.x,display.y)
-        self.showFullScreen()
+        
+        
         
 
 
@@ -195,6 +222,7 @@ class GridWidget(QWidget):
 class SlideShowLabel(QStackedWidget):
     def __init__(self, filenames,duration,index):
         super().__init__()
+        
         self.us_index = index
         self.filenames = filenames
         self.index = 0
@@ -331,7 +359,6 @@ def main():
     window.show()
     while app.exec_():
         pass
-    del_images()
     window.save()
     sys.exit()
     

@@ -1,11 +1,10 @@
 from screeninfo import get_monitors,Monitor
 from PIL import Image
-import fitz,subprocess,sys,os,requests,shutil
+import fitz,os,requests,shutil
 from datetime import  datetime
 from multiprocessing import Process
+from.install_packages import check_new_packages
 
-def check_new_packages():
-    subprocess.check_call([sys.executable, "-m", "pip", "install",'-r','.\\files\\requirements.txt'])
 
 
 def update():
@@ -44,7 +43,7 @@ def update():
             shutil.move(f"../{repo_name}-{latest_version[1:]}/files", pdfslideshow_path)
             shutil.rmtree('../update.zip')
             shutil.rmtree(f"../{repo_name}-{latest_version[1:]}")
-            
+
             check_new_packages()
             print('Update complete!')
             

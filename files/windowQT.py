@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget,
                               QMainWindow,QFileDialog,
                               QStackedWidget,QHBoxLayout,
                               QGraphicsOpacityEffect,QSizePolicy)
-from PyQt5.QtGui import QPixmap,QIntValidator
+from PyQt5.QtGui import QPixmap,QIntValidator, QFont
 from PyQt5.QtCore import QTimer,Qt,QUrl,QPropertyAnimation,QPoint
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtMultimedia import QMediaContent,QMediaPlayer
@@ -26,30 +26,45 @@ class MainWindow(QMainWindow):
         self.init_ui()
 
     def init_ui(self):
+        dpi = self.screen().physicalDotsPerInch()
+        font = QFont()
+        font.setPointSizeF(12*dpi/72)
+
         self.row_label = QtWidgets.QLabel('Rows:')
         self.row_input = QtWidgets.QLineEdit()
+        self.row_label.setFont(font)
         self.row_input.setText('3')
+        self.row_input.setFont(font)
         self.row_input.setValidator(QIntValidator())
         self.column_label = QtWidgets.QLabel('Columns:')
+        self.column_label.setFont(font)
         self.column_input = QtWidgets.QLineEdit()
+        self.column_input.setFont(font)
         self.column_input.setText('4')
         self.column_input.setValidator(QIntValidator())
         self.file_label = QtWidgets.QLabel('')
+        self.file_label.setFont(font) 
         self.upload_button = QtWidgets.QPushButton('Upload File')
+        self.upload_button.setFont(font)
         self.generate_slideshow = QtWidgets.QPushButton('Create Slideshow')
+        self.generate_slideshow.setFont(font)
         self.generate_slideshow.setEnabled(False)
         self.video_folder_label = QtWidgets.QLabel('')
+        self.video_folder_label.setFont(font)
         self.select_folder_button = QtWidgets.QPushButton('Select Folder')
+        self.select_folder_button.setFont(font)
 
 
         # Create a label, slider, and line edit for controlling the duration
         duration_box = QHBoxLayout()
         self.duration_label = QtWidgets.QLabel('Duración:')
+        self.duration_label.setFont(font)
         self.duration_slider = QtWidgets.QSlider(Qt.Horizontal)
         duration_units = QtWidgets.QLabel('s')
         self.duration_slider.setRange(1, 60)
         self.duration_slider.setValue(5)
         self.duration_input = QtWidgets.QLineEdit()
+        self.duration_input.setFont(font)
         self.duration_input.setText('15')
         self.duration_input.setValidator(QIntValidator())
 

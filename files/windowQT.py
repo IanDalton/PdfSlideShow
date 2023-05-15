@@ -30,13 +30,13 @@ class MainWindow(QMainWindow):
         font = QFont()
         font.setPointSizeF(12*dpi/72)
 
-        self.row_label = QtWidgets.QLabel('Rows:')
+        self.row_label = QtWidgets.QLabel('Filas:')
         self.row_input = QtWidgets.QLineEdit()
         self.row_label.setFont(font)
         self.row_input.setText('3')
         self.row_input.setFont(font)
         self.row_input.setValidator(QIntValidator())
-        self.column_label = QtWidgets.QLabel('Columns:')
+        self.column_label = QtWidgets.QLabel('Columnas:')
         self.column_label.setFont(font)
         self.column_input = QtWidgets.QLineEdit()
         self.column_input.setFont(font)
@@ -44,14 +44,14 @@ class MainWindow(QMainWindow):
         self.column_input.setValidator(QIntValidator())
         self.file_label = QtWidgets.QLabel('')
         self.file_label.setFont(font) 
-        self.upload_button = QtWidgets.QPushButton('Upload File')
+        self.upload_button = QtWidgets.QPushButton('Subir PDF')
         self.upload_button.setFont(font)
-        self.generate_slideshow = QtWidgets.QPushButton('Create Slideshow')
+        self.generate_slideshow = QtWidgets.QPushButton('Crear Video')
         self.generate_slideshow.setFont(font)
         self.generate_slideshow.setEnabled(False)
         self.video_folder_label = QtWidgets.QLabel('')
         self.video_folder_label.setFont(font)
-        self.select_folder_button = QtWidgets.QPushButton('Select Folder')
+        self.select_folder_button = QtWidgets.QPushButton('Seleccionar carpeta de videos')
         self.select_folder_button.setFont(font)
 
 
@@ -127,7 +127,7 @@ class MainWindow(QMainWindow):
             print(f'File uploaded: {self.folder_name}')
             self.video_folder_label.setText(self.folder_name)
     def upload_file(self):
-        self.file_name, _ = QFileDialog.getOpenFileName(self, 'Open File', filter='PDF Files (*.pdf)', options=QFileDialog.DontUseNativeDialog)
+        self.file_name, _ = QFileDialog.getOpenFileName(self, 'Seleccionar PDF', filter='PDF Files (*.pdf)', options=QFileDialog.DontUseNativeDialog)
         if self.file_name:
             print(f'File uploaded: {self.file_name}')
             self.generate_slideshow.setEnabled(True)
